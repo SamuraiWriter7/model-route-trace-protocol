@@ -1,0 +1,306 @@
+schema_version: "0.4.0"
+
+graph_id: "camrg-2026-000001"
+
+recorded_at: "2026-07-10T21:00:00Z"
+
+task_ref: "task-architecture-review-001"
+
+origin_ref: "origin-trace-000078"
+
+graph_summary: >
+  Cross-agent execution graph for a distributed architecture review.
+  The task passes through routing, discovery, and analysis stages,
+  then branches into verification and boundary review before merging
+  at a human gate and producing the final artifact.
+
+nodes:
+  - node_id: "node-origin"
+
+    node_type: "origin_trace"
+
+    label: "Origin Trace"
+
+    locality: "logical"
+
+    status: "completed"
+
+    notes: >
+      Initial origin trace and task context.
+
+  - node_id: "node-router"
+
+    node_type: "router"
+
+    label: "Cognitive Router"
+
+    agent_id: "routing-agent-01"
+
+    agent_role: "router"
+
+    route_decision_ref: "rdr-2026-000001"
+
+    locality: "private_cloud"
+
+    status: "completed"
+
+  - node_id: "node-finder"
+
+    node_type: "agent_execution"
+
+    label: "Finder Wing"
+
+    agent_id: "agent-finder-01"
+
+    agent_role: "finder"
+
+    wing_id: "finder-wing"
+
+    model_ref: "model-local-search-02"
+
+    route_trace_ref: "mrt-finder-000001"
+
+    provider_binding_ref: "peb-local-runtime-001"
+
+    placement_receipt_ref: "cpr-local-device-011"
+
+    locality: "local_device"
+
+    status: "completed"
+
+  - node_id: "node-analyst"
+
+    node_type: "agent_execution"
+
+    label: "Analyst Wing"
+
+    agent_id: "agent-analyst-01"
+
+    agent_role: "analyst"
+
+    wing_id: "analyst-wing"
+
+    model_ref: "model-enterprise-reasoning-03"
+
+    route_trace_ref: "mrt-2026-000001"
+
+    route_decision_ref: "rdr-2026-000001"
+
+    provider_binding_ref: "peb-2026-000001"
+
+    placement_receipt_ref: "cpr-2026-000118"
+
+    locality: "private_cloud"
+
+    status: "completed"
+
+  - node_id: "node-verifier"
+
+    node_type: "agent_execution"
+
+    label: "Verifier Wing"
+
+    agent_id: "agent-verifier-02"
+
+    agent_role: "verifier"
+
+    wing_id: "verifier-wing"
+
+    model_ref: "model-local-verifier-04"
+
+    route_trace_ref: "mrt-verifier-000019"
+
+    provider_binding_ref: "peb-local-runtime-004"
+
+    locality: "on_prem"
+
+    status: "completed"
+
+  - node_id: "node-boundary"
+
+    node_type: "boundary_check"
+
+    label: "Boundary Review Wing"
+
+    agent_id: "agent-boundary-01"
+
+    agent_role: "boundary_reviewer"
+
+    wing_id: "boundary-wing"
+
+    policy_ref: "enterprise-ai-boundary-policy-07"
+
+    route_trace_ref: "mrt-boundary-000008"
+
+    locality: "private_cloud"
+
+    status: "completed"
+
+  - node_id: "node-human-gate"
+
+    node_type: "human_gate"
+
+    label: "Human Review Gate"
+
+    human_review_ref: "human-review-2026-000071"
+
+    locality: "human"
+
+    status: "completed"
+
+  - node_id: "node-artifact"
+
+    node_type: "artifact"
+
+    label: "Architecture Review Artifact"
+
+    artifact_ref: "artifact-architecture-review-021"
+
+    locality: "logical"
+
+    status: "completed"
+
+edges:
+  - edge_id: "edge-001"
+
+    from_node: "node-origin"
+
+    to_node: "node-router"
+
+    relation_type: "routes_to"
+
+    transfer_mode: "sequential"
+
+    trace_relay_ref: "trace-relay-000330"
+
+    status: "completed"
+
+  - edge_id: "edge-002"
+
+    from_node: "node-router"
+
+    to_node: "node-finder"
+
+    relation_type: "routes_to"
+
+    transfer_mode: "sequential"
+
+    handoff_record_ref: "handoff-2026-000038"
+
+    status: "completed"
+
+  - edge_id: "edge-003"
+
+    from_node: "node-finder"
+
+    to_node: "node-analyst"
+
+    relation_type: "hands_off_to"
+
+    transfer_mode: "sequential"
+
+    handoff_record_ref: "handoff-2026-000041"
+
+    trace_relay_ref: "trace-relay-000332"
+
+    status: "completed"
+
+  - edge_id: "edge-004"
+
+    from_node: "node-analyst"
+
+    to_node: "node-verifier"
+
+    relation_type: "hands_off_to"
+
+    transfer_mode: "parallel"
+
+    handoff_record_ref: "handoff-2026-000044"
+
+    status: "completed"
+
+  - edge_id: "edge-005"
+
+    from_node: "node-analyst"
+
+    to_node: "node-boundary"
+
+    relation_type: "checks_boundary_for"
+
+    transfer_mode: "parallel"
+
+    handoff_record_ref: "handoff-2026-000045"
+
+    status: "completed"
+
+  - edge_id: "edge-006"
+
+    from_node: "node-verifier"
+
+    to_node: "node-human-gate"
+
+    relation_type: "provides_evidence_to"
+
+    transfer_mode: "merge"
+
+    payload_ref: "verification-report-000022"
+
+    status: "completed"
+
+  - edge_id: "edge-007"
+
+    from_node: "node-boundary"
+
+    to_node: "node-human-gate"
+
+    relation_type: "provides_evidence_to"
+
+    transfer_mode: "merge"
+
+    payload_ref: "boundary-review-report-000016"
+
+    status: "completed"
+
+  - edge_id: "edge-008"
+
+    from_node: "node-human-gate"
+
+    to_node: "node-artifact"
+
+    relation_type: "produces"
+
+    transfer_mode: "sequential"
+
+    status: "completed"
+
+entry_node_ids:
+  - "node-origin"
+
+terminal_node_ids:
+  - "node-artifact"
+
+parallel_groups:
+  - group_id: "parallel-review-group-01"
+
+    member_node_ids:
+      - "node-verifier"
+      - "node-boundary"
+
+    join_node_id: "node-human-gate"
+
+    completion_policy: "all_required"
+
+    policy_ref: "multi-wing-review-policy-04"
+
+graph_metrics:
+  node_count: 8
+  edge_count: 8
+  maximum_depth: 6
+  parallel_branch_count: 2
+
+status: "completed"
+
+notes: >
+  The graph records the complete cross-agent execution lineage,
+  including parallel verification and boundary review branches,
+  their merge at the human gate, and final artifact production.
