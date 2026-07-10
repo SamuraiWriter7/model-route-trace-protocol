@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/model-route-record.schema.json",
+  "title": "Model Route Record",
+  "description": "Records a single AI execution route segment across an agent, model, provider, execution environment, input trace, and output artifact.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "route_trace_id",
+    "recorded_at",
+    "task",
+    "agent",
+    "model",
+    "provider",
+    "execution",
+    "input",
+    "output",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+
+    "route_trace_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this model route record."
+    },
+
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "task_type"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_summary": {
+          "type": "string"
+        }
+      }
+    },
+
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_id",
+        "agent_role"
+      ],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wing_id": {
+          "type": "string"
+        },
+        "handoff_record_ref": {
+          "type": "string"
+        }
+      }
+    },
+
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id"
+      ],
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_family": {
+          "type": "string"
+        },
+        "model_version": {
+          "type": "string"
+        },
+        "model_class": {
+          "type": "string",
+          "enum": [
+            "small",
+            "medium",
+            "large",
+            "frontier",
+            "specialized",
+            "embedding",
+            "reranker",
+            "multimodal",
+            "other"
+          ]
+        }
+      }
+    },
+
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_name",
+        "provider_type"
+      ],
+      "properties": {
+        "provider_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider_type": {
+          "type": "string",
+          "enum": [
+            "managed_cloud",
+            "enterprise_cloud",
+            "self_hosted",
+            "local_runtime",
+            "openai_compatible",
+            "other"
+          ]
+        },
+        "provider_account_ref": {
+          "type": "string",
+          "description": "Non-secret reference to the provider account, tenant, or logical provider configuration."
+        }
+      }
+    },
+
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locality",
+        "environment_class"
+      ],
+      "properties": {
+        "locality": {
+          "type": "string",
+          "enum": [
+            "local_device",
+            "edge",
+            "on_prem",
+            "private_cloud",
+            "public_cloud",
+            "hybrid",
+            "unknown"
+          ]
+        },
+        "environment_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "region": {
+          "type": "string"
+        },
+        "compute_node_ref": {
+          "type": "string"
+        },
+        "placement_receipt_ref": {
+          "type": "string"
+        }
+      }
+    },
+
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_ref"
+      ],
+      "properties": {
+        "input_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "origin_trace_ref": {
+          "type": "string"
+        },
+        "source_artifact_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_ref",
+        "artifact_type"
+      ],
+      "properties": {
+        "artifact_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trace_relay_ref": {
+          "type": "string"
+        }
+      }
+    },
+
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed",
+        "partial",
+        "cancelled"
+      ]
+    },
+
+    "notes": {
+      "type": "string"
+    }
+  }
+}
