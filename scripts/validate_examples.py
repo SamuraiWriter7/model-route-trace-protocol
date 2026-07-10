@@ -13,12 +13,26 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
+
 VALIDATION_TARGETS = [
     {
         "name": "Model Route Record",
-        "schema": ROOT_DIR / "schemas" / "model-route-record.schema.json",
-        "example": ROOT_DIR / "examples" / "model-route-record.example.yaml",
-    }
+        "schema": ROOT_DIR
+        / "schemas"
+        / "model-route-record.schema.json",
+        "example": ROOT_DIR
+        / "examples"
+        / "model-route-record.example.yaml",
+    },
+    {
+        "name": "Provider and Endpoint Binding",
+        "schema": ROOT_DIR
+        / "schemas"
+        / "provider-endpoint-binding.schema.json",
+        "example": ROOT_DIR
+        / "examples"
+        / "provider-endpoint-binding.example.yaml",
+    },
 ]
 
 
@@ -27,7 +41,9 @@ def load_json(path: Path) -> dict[str, Any]:
         with path.open("r", encoding="utf-8") as file:
             return json.load(file)
     except FileNotFoundError:
-        raise RuntimeError(f"JSON file not found: {path}") from None
+        raise RuntimeError(
+            f"JSON file not found: {path}"
+        ) from None
     except json.JSONDecodeError as exc:
         raise RuntimeError(
             f"Invalid JSON in {path}: {exc}"
@@ -39,7 +55,9 @@ def load_yaml(path: Path) -> dict[str, Any]:
         with path.open("r", encoding="utf-8") as file:
             data = yaml.safe_load(file)
     except FileNotFoundError:
-        raise RuntimeError(f"YAML file not found: {path}") from None
+        raise RuntimeError(
+            f"YAML file not found: {path}"
+        ) from None
     except yaml.YAMLError as exc:
         raise RuntimeError(
             f"Invalid YAML in {path}: {exc}"
@@ -57,7 +75,10 @@ def format_error_path(error: Any) -> str:
     if not error.absolute_path:
         return "<root>"
 
-    return ".".join(str(part) for part in error.absolute_path)
+    return ".".join(
+        str(part)
+        for part in error.absolute_path
+    )
 
 
 def validate_target(
@@ -66,8 +87,14 @@ def validate_target(
     example_path: Path,
 ) -> bool:
     print(f"[validate] {name}")
-    print(f"  schema : {schema_path.relative_to(ROOT_DIR)}")
-    print(f"  example: {example_path.relative_to(ROOT_DIR)}")
+    print(
+        f"  schema : "
+        f"{schema_path.relative_to(ROOT_DIR)}"
+    )
+    print(
+        f"  example: "
+        f"{example_path.relative_to(ROOT_DIR)}"
+    )
 
     schema = load_json(schema_path)
     example = load_yaml(example_path)
@@ -81,7 +108,9 @@ def validate_target(
 
     errors = sorted(
         validator.iter_errors(example),
-        key=lambda error: list(error.absolute_path),
+        key=lambda error: list(
+            error.absolute_path
+        ),
     )
 
     if errors:
@@ -89,16 +118,23 @@ def validate_target(
 
         for error in errors:
             path = format_error_path(error)
-            print(f"  Error: {path}: {error.message}")
+            print(
+                f"  Error: {path}: "
+                f"{error.message}"
+            )
 
         return False
 
-    print(f"[ok] {example_path.name} is valid")
+    print(
+        f"[ok] {example_path.name} is valid"
+    )
     return True
 
 
 def main() -> int:
-    print("=== Model Route Trace Protocol Validation ===")
+    print(
+        "=== Model Route Trace Protocol Validation ==="
+    )
     print()
 
     all_valid = True
