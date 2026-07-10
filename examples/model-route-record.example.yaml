@@ -1,0 +1,59 @@
+schema_version: "0.1.0"
+
+route_trace_id: "mrt-2026-000001"
+
+recorded_at: "2026-07-10T20:20:00Z"
+
+task:
+  task_id: "task-architecture-review-001"
+  task_type: "architecture_review"
+  task_summary: >
+    Review a distributed AI architecture and generate
+    a structured technical recommendation.
+
+agent:
+  agent_id: "agent-analyst-01"
+  agent_role: "analyst"
+  wing_id: "analyst-wing"
+  handoff_record_ref: "handoff-2026-000041"
+
+model:
+  model_id: "example-model-01"
+  model_family: "general-reasoning-model"
+  model_version: "2026-07"
+  model_class: "large"
+
+provider:
+  provider_name: "example-enterprise-provider"
+  provider_type: "enterprise_cloud"
+  provider_account_ref: "tenant-ref-alpha"
+
+execution:
+  locality: "private_cloud"
+  environment_class: "enterprise-ai-endpoint"
+  region: "ap-northeast"
+  compute_node_ref: "compute-node-apne-04"
+  placement_receipt_ref: "cpr-2026-000118"
+
+input:
+  input_ref: "input-package-000201"
+  origin_trace_ref: "origin-trace-000078"
+  source_artifact_refs:
+    - "artifact-design-note-014"
+    - "artifact-routing-policy-009"
+
+output:
+  artifact_ref: "artifact-architecture-review-021"
+  artifact_type: "technical_recommendation"
+  trace_relay_ref: "trace-relay-000332"
+
+timing:
+  started_at: "2026-07-10T20:18:30Z"
+  completed_at: "2026-07-10T20:19:42Z"
+  duration_ms: 72000
+
+status: "completed"
+
+notes: >
+  The route record captures the agent, model, provider,
+  compute environment, trace input, and generated artifact.
