@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/provider-endpoint-binding.schema.json",
+  "title": "Provider and Endpoint Binding",
+  "description": "Binds a model route trace to the provider, endpoint, trust boundary, data boundary, authentication mode, and network path used for execution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "binding_id",
+    "recorded_at",
+    "route_trace_ref",
+    "provider",
+    "endpoint",
+    "trust_boundary",
+    "data_boundary",
+    "authentication",
+    "network_path",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.2.0"
+    },
+
+    "binding_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this provider and endpoint binding record."
+    },
+
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "route_trace_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to the Model Route Record associated with this binding."
+    },
+
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_name",
+        "provider_type"
+      ],
+      "properties": {
+        "provider_name": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "provider_type": {
+          "type": "string",
+          "enum": [
+            "managed_cloud",
+            "enterprise_cloud",
+            "self_hosted",
+            "local_runtime",
+            "openai_compatible",
+            "other"
+          ]
+        },
+
+        "provider_account_ref": {
+          "type": "string",
+          "description": "Non-secret reference to the provider account, tenant, or logical provider configuration."
+        }
+      }
+    },
+
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "endpoint_id",
+        "endpoint_class",
+        "locality",
+        "protocol"
+      ],
+      "properties": {
+        "endpoint_id": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "endpoint_class": {
+          "type": "string",
+          "enum": [
+            "managed_api",
+            "enterprise_endpoint",
+            "self_hosted_api",
+            "local_runtime",
+            "gateway_proxy",
+            "openai_compatible_endpoint",
+            "other"
+          ]
+        },
+
+        "locality": {
+          "type": "string",
+          "enum": [
+            "local_device",
+            "edge",
+            "on_prem",
+            "private_cloud",
+            "public_cloud",
+            "hybrid",
+            "unknown"
+          ]
+        },
+
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "https_api",
+            "local_http",
+            "unix_socket",
+            "grpc",
+            "ipc",
+            "custom",
+            "unknown"
+          ]
+        },
+
+        "address_ref": {
+          "type": "string",
+          "description": "Logical endpoint reference. Secrets, tokens, and embedded credentials must not be included."
+        },
+
+        "region": {
+          "type": "string"
+        },
+
+        "compute_node_ref": {
+          "type": "string"
+        }
+      }
+    },
+
+    "trust_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_trust_domain",
+        "destination_trust_domain",
+        "boundary_crossing"
+      ],
+      "properties": {
+        "source_trust_domain": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "destination_trust_domain": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "boundary_crossing": {
+          "type": "boolean"
+        },
+
+        "boundary_policy_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "data_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data_classification",
+        "residency_scope",
+        "retention_policy",
+        "training_use_policy"
+      ],
+      "properties": {
+        "data_classification": {
+          "type": "string",
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted",
+            "mixed",
+            "unknown"
+          ]
+        },
+
+        "residency_scope": {
+          "type": "string",
+          "enum": [
+            "unrestricted",
+            "region_locked",
+            "country_locked",
+            "on_prem_only",
+            "local_only",
+            "custom",
+            "unknown"
+          ]
+        },
+
+        "allowed_regions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+
+        "retention_policy": {
+          "type": "string",
+          "enum": [
+            "provider_default",
+            "no_retention",
+            "zero_data_retention",
+            "local_only",
+            "custom",
+            "unknown"
+          ]
+        },
+
+        "training_use_policy": {
+          "type": "string",
+          "enum": [
+            "allowed",
+            "prohibited",
+            "contractual",
+            "unknown"
+          ]
+        },
+
+        "policy_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "auth_mode",
+        "secret_material_recorded"
+      ],
+      "properties": {
+        "auth_mode": {
+          "type": "string",
+          "enum": [
+            "api_key",
+            "oauth",
+            "managed_identity",
+            "service_account",
+            "mtls",
+            "local_socket",
+            "none",
+            "other"
+          ]
+        },
+
+        "credential_ref": {
+          "type": "string",
+          "description": "Non-secret logical reference to the credential configuration."
+        },
+
+        "secret_material_recorded": {
+          "type": "boolean",
+          "const": false,
+          "description": "Must always be false. Secret material must never be stored in this record."
+        }
+      }
+    },
+
+    "network_path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_class",
+        "encryption_in_transit"
+      ],
+      "properties": {
+        "route_class": {
+          "type": "string",
+          "enum": [
+            "public_internet",
+            "private_network",
+            "local_loopback",
+            "air_gapped",
+            "hybrid",
+            "custom",
+            "unknown"
+          ]
+        },
+
+        "gateway_ref": {
+          "type": "string"
+        },
+
+        "proxy_ref": {
+          "type": "string"
+        },
+
+        "encryption_in_transit": {
+          "type": "boolean"
+        }
+      }
+    },
+
+    "policy_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+
+    "status": {
+      "type": "string",
+      "enum": [
+        "bound",
+        "failed",
+        "unverified",
+        "revoked"
+      ]
+    },
+
+    "notes": {
+      "type": "string"
+    }
+  }
+}
