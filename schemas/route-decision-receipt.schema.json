@@ -1,0 +1,635 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/route-decision-receipt.schema.json",
+  "title": "Route Decision Receipt",
+  "description": "Records why one model execution route was selected from multiple candidate routes, including constraints, evaluations, policy checks, and computational necessity assessment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "route_decision_id",
+    "recorded_at",
+    "task_ref",
+    "decision_context",
+    "constraints",
+    "candidate_routes",
+    "selection",
+    "pranayama_assessment",
+    "policy_evaluation",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.3.0"
+    },
+
+    "route_decision_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this route decision receipt."
+    },
+
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "task_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to the task for which the route decision was made."
+    },
+
+    "route_trace_ref": {
+      "type": "string",
+      "description": "Optional reference to the resulting Model Route Record."
+    },
+
+    "decision_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_complexity",
+        "data_sensitivity",
+        "latency_priority",
+        "cost_priority",
+        "energy_priority"
+      ],
+      "properties": {
+        "task_complexity": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical",
+            "unknown"
+          ]
+        },
+
+        "data_sensitivity": {
+          "type": "string",
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted",
+            "mixed",
+            "unknown"
+          ]
+        },
+
+        "latency_priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+
+        "cost_priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+
+        "energy_priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+
+        "quality_requirement": {
+          "type": "string",
+          "enum": [
+            "best_effort",
+            "standard",
+            "high",
+            "critical"
+          ]
+        },
+
+        "decision_summary": {
+          "type": "string"
+        }
+      }
+    },
+
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_capability_level",
+        "allowed_localities"
+      ],
+      "properties": {
+        "required_capability_level": {
+          "type": "string",
+          "enum": [
+            "basic",
+            "standard",
+            "advanced",
+            "frontier",
+            "specialized"
+          ]
+        },
+
+        "maximum_latency_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+
+        "maximum_cost_class": {
+          "type": "string",
+          "enum": [
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "unbounded"
+          ]
+        },
+
+        "allowed_localities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "local_device",
+              "edge",
+              "on_prem",
+              "private_cloud",
+              "public_cloud",
+              "hybrid",
+              "unknown"
+            ]
+          }
+        },
+
+        "required_region_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "data_boundary_policy_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "security_policy_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "candidate_routes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "route_id",
+          "route_class",
+          "model_ref",
+          "locality",
+          "capability_assessment",
+          "latency_assessment",
+          "cost_assessment",
+          "energy_assessment",
+          "policy_status",
+          "disposition"
+        ],
+        "properties": {
+          "route_id": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "route_class": {
+            "type": "string",
+            "enum": [
+              "local_model",
+              "edge_model",
+              "enterprise_endpoint",
+              "private_cloud_model",
+              "public_cloud_model",
+              "frontier_model",
+              "multi_wing_route",
+              "hybrid_route",
+              "other"
+            ]
+          },
+
+          "model_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "provider_binding_ref": {
+            "type": "string"
+          },
+
+          "placement_candidate_ref": {
+            "type": "string"
+          },
+
+          "locality": {
+            "type": "string",
+            "enum": [
+              "local_device",
+              "edge",
+              "on_prem",
+              "private_cloud",
+              "public_cloud",
+              "hybrid",
+              "unknown"
+            ]
+          },
+
+          "capability_assessment": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "level",
+              "meets_requirement"
+            ],
+            "properties": {
+              "level": {
+                "type": "string",
+                "enum": [
+                  "basic",
+                  "standard",
+                  "advanced",
+                  "frontier",
+                  "specialized",
+                  "unknown"
+                ]
+              },
+
+              "meets_requirement": {
+                "type": "boolean"
+              },
+
+              "assessment_ref": {
+                "type": "string"
+              }
+            }
+          },
+
+          "latency_assessment": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "class",
+              "within_budget"
+            ],
+            "properties": {
+              "class": {
+                "type": "string",
+                "enum": [
+                  "very_low",
+                  "low",
+                  "medium",
+                  "high",
+                  "unknown"
+                ]
+              },
+
+              "estimated_latency_ms": {
+                "type": "integer",
+                "minimum": 0
+              },
+
+              "within_budget": {
+                "type": "boolean"
+              }
+            }
+          },
+
+          "cost_assessment": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "cost_class",
+              "within_budget"
+            ],
+            "properties": {
+              "cost_class": {
+                "type": "string",
+                "enum": [
+                  "minimal",
+                  "low",
+                  "medium",
+                  "high",
+                  "unknown"
+                ]
+              },
+
+              "estimated_cost_ref": {
+                "type": "string"
+              },
+
+              "within_budget": {
+                "type": "boolean"
+              }
+            }
+          },
+
+          "energy_assessment": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "energy_class"
+            ],
+            "properties": {
+              "energy_class": {
+                "type": "string",
+                "enum": [
+                  "minimal",
+                  "low",
+                  "medium",
+                  "high",
+                  "unknown"
+                ]
+              },
+
+              "energy_estimate_ref": {
+                "type": "string"
+              }
+            }
+          },
+
+          "policy_status": {
+            "type": "string",
+            "enum": [
+              "allowed",
+              "allowed_with_conditions",
+              "blocked",
+              "unverified"
+            ]
+          },
+
+          "policy_evidence_refs": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "selected",
+              "rejected",
+              "fallback",
+              "deferred"
+            ]
+          },
+
+          "rejection_reasons": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "capability_threshold_not_met",
+                "latency_budget_exceeded",
+                "cost_budget_exceeded",
+                "energy_budget_exceeded",
+                "data_boundary_violation",
+                "region_constraint_violation",
+                "security_policy_violation",
+                "provider_not_approved",
+                "endpoint_unavailable",
+                "placement_unavailable",
+                "lower_priority",
+                "other"
+              ]
+            }
+          },
+
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected_route_id",
+        "selection_reason_codes",
+        "selection_summary",
+        "decision_mode"
+      ],
+      "properties": {
+        "selected_route_id": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "selection_reason_codes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "capability_fit",
+              "latency_fit",
+              "cost_fit",
+              "energy_fit",
+              "data_boundary_fit",
+              "region_fit",
+              "security_fit",
+              "provider_policy_fit",
+              "local_first_preference",
+              "minimum_sufficient_compute",
+              "human_override",
+              "fallback_activation",
+              "other"
+            ]
+          }
+        },
+
+        "selection_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "decision_mode": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "policy_driven",
+            "agent_recommended",
+            "human_selected",
+            "hybrid"
+          ]
+        },
+
+        "decision_agent_ref": {
+          "type": "string"
+        },
+
+        "human_review_ref": {
+          "type": "string"
+        },
+
+        "override_applied": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "override_reason": {
+          "type": "string"
+        }
+      }
+    },
+
+    "pranayama_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "local_first_checked",
+        "smaller_model_checked",
+        "minimum_sufficient_compute_applied",
+        "escalation_required",
+        "compute_necessity"
+      ],
+      "properties": {
+        "local_first_checked": {
+          "type": "boolean"
+        },
+
+        "smaller_model_checked": {
+          "type": "boolean"
+        },
+
+        "minimum_sufficient_compute_applied": {
+          "type": "boolean"
+        },
+
+        "escalation_required": {
+          "type": "boolean"
+        },
+
+        "escalation_reason": {
+          "type": "string"
+        },
+
+        "compute_necessity": {
+          "type": "string",
+          "enum": [
+            "minimal",
+            "moderate",
+            "high",
+            "critical"
+          ]
+        },
+
+        "pranayama_policy_ref": {
+          "type": "string"
+        },
+
+        "assessment_notes": {
+          "type": "string"
+        }
+      }
+    },
+
+    "policy_evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall_status",
+        "evaluated_policy_refs"
+      ],
+      "properties": {
+        "overall_status": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "passed_with_conditions",
+            "failed",
+            "unverified"
+          ]
+        },
+
+        "evaluated_policy_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "condition_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "violation_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "status": {
+      "type": "string",
+      "enum": [
+        "decided",
+        "executed",
+        "superseded",
+        "failed",
+        "unresolved"
+      ]
+    },
+
+    "notes": {
+      "type": "string"
+    }
+  }
+}
