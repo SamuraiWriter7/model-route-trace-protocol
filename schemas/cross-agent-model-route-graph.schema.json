@@ -1,0 +1,401 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/cross-agent-model-route-graph.schema.json",
+  "title": "Cross-Agent Model Route Graph",
+  "description": "Represents a directed acyclic execution graph spanning agents, model executions, retrieval systems, tools, policy boundaries, human gates, and artifacts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "graph_id",
+    "recorded_at",
+    "task_ref",
+    "origin_ref",
+    "nodes",
+    "edges",
+    "entry_node_ids",
+    "terminal_node_ids",
+    "graph_summary",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.4.0"
+    },
+
+    "graph_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "task_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "origin_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to the originating trace, request, or ignition record."
+    },
+
+    "graph_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "nodes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "node_id",
+          "node_type",
+          "label",
+          "status"
+        ],
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "node_type": {
+            "type": "string",
+            "enum": [
+              "origin_trace",
+              "router",
+              "agent_execution",
+              "model_execution",
+              "retrieval",
+              "tool_execution",
+              "boundary_check",
+              "human_gate",
+              "artifact",
+              "other"
+            ]
+          },
+
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "agent_id": {
+            "type": "string"
+          },
+
+          "agent_role": {
+            "type": "string"
+          },
+
+          "wing_id": {
+            "type": "string"
+          },
+
+          "model_ref": {
+            "type": "string"
+          },
+
+          "route_trace_ref": {
+            "type": "string"
+          },
+
+          "route_decision_ref": {
+            "type": "string"
+          },
+
+          "provider_binding_ref": {
+            "type": "string"
+          },
+
+          "handoff_record_ref": {
+            "type": "string"
+          },
+
+          "placement_receipt_ref": {
+            "type": "string"
+          },
+
+          "tool_ref": {
+            "type": "string"
+          },
+
+          "retrieval_ref": {
+            "type": "string"
+          },
+
+          "policy_ref": {
+            "type": "string"
+          },
+
+          "human_review_ref": {
+            "type": "string"
+          },
+
+          "artifact_ref": {
+            "type": "string"
+          },
+
+          "locality": {
+            "type": "string",
+            "enum": [
+              "local_device",
+              "edge",
+              "on_prem",
+              "private_cloud",
+              "public_cloud",
+              "hybrid",
+              "human",
+              "logical",
+              "unknown"
+            ]
+          },
+
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "completed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "completed",
+              "failed",
+              "blocked",
+              "skipped",
+              "cancelled"
+            ]
+          },
+
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "edges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "edge_id",
+          "from_node",
+          "to_node",
+          "relation_type",
+          "transfer_mode",
+          "status"
+        ],
+        "properties": {
+          "edge_id": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "from_node": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "to_node": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "originates",
+              "routes_to",
+              "hands_off_to",
+              "provides_context_to",
+              "provides_evidence_to",
+              "verifies",
+              "checks_boundary_for",
+              "requires_approval_from",
+              "merges_into",
+              "produces",
+              "fallback_to",
+              "other"
+            ]
+          },
+
+          "transfer_mode": {
+            "type": "string",
+            "enum": [
+              "sequential",
+              "parallel",
+              "conditional",
+              "fallback",
+              "merge",
+              "human_escalation",
+              "other"
+            ]
+          },
+
+          "handoff_record_ref": {
+            "type": "string"
+          },
+
+          "trace_relay_ref": {
+            "type": "string"
+          },
+
+          "condition_ref": {
+            "type": "string"
+          },
+
+          "condition_summary": {
+            "type": "string"
+          },
+
+          "payload_ref": {
+            "type": "string"
+          },
+
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "active",
+              "completed",
+              "blocked",
+              "failed",
+              "skipped"
+            ]
+          },
+
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "entry_node_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+
+    "terminal_node_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+
+    "parallel_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "group_id",
+          "member_node_ids"
+        ],
+        "properties": {
+          "group_id": {
+            "type": "string",
+            "minLength": 1
+          },
+
+          "member_node_ids": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+
+          "join_node_id": {
+            "type": "string"
+          },
+
+          "completion_policy": {
+            "type": "string",
+            "enum": [
+              "all_required",
+              "any_sufficient",
+              "quorum",
+              "policy_defined"
+            ]
+          },
+
+          "policy_ref": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "graph_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+
+        "edge_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+
+        "maximum_depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+
+        "parallel_branch_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "active",
+        "completed",
+        "failed",
+        "partial",
+        "superseded"
+      ]
+    },
+
+    "notes": {
+      "type": "string"
+    }
+  }
+}
