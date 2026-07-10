@@ -23,6 +23,7 @@ VALIDATION_TARGETS = [
         "example": ROOT_DIR
         / "examples"
         / "model-route-record.example.yaml",
+        "semantic_validator": None,
     },
     {
         "name": "Provider and Endpoint Binding",
@@ -32,6 +33,17 @@ VALIDATION_TARGETS = [
         "example": ROOT_DIR
         / "examples"
         / "provider-endpoint-binding.example.yaml",
+        "semantic_validator": None,
+    },
+    {
+        "name": "Route Decision Receipt",
+        "schema": ROOT_DIR
+        / "schemas"
+        / "route-decision-receipt.schema.json",
+        "example": ROOT_DIR
+        / "examples"
+        / "route-decision-receipt.example.yaml",
+        "semantic_validator": "route_decision",
     },
 ]
 
@@ -81,10 +93,115 @@ def format_error_path(error: Any) -> str:
     )
 
 
+def validate_route_decision_semantics(
+    document: dict[str, Any],
+) -> list[str]:
+    errors: list[str] = []
+
+    candidate_routes = document.get(
+        "candidate_routes",
+        [],
+    )
+
+    selection = document.get(
+        "selection",
+        {},
+    )
+
+    route_ids = [
+        route.get("route_id")
+        for route in candidate_routes
+        if isinstance(route, dict)
+    ]
+
+    if len(route_ids) != len(set(route_ids)):
+        errors.append(
+            "candidate_routes contains duplicate route_id values"
+        )
+
+    selected_route_id = selection.get(
+        "selected_route_id"
+    )
+
+    if selected_route_id not in route_ids:
+        errors.append(
+            "selection.selected_route_id does not reference "
+            "an existing candidate route"
+        )
+
+    selected_candidates = [
+        route
+        for route in candidate_routes
+        if route.get("disposition") == "selected"
+    ]
+
+    if len(selected_candidates) != 1:
+        errors.append(
+            "exactly one candidate route must have "
+            "disposition='selected'"
+        )
+
+    if selected_candidates:
+        disposition_route_id = selected_candidates[
+            0
+        ].get("route_id")
+
+        if disposition_route_id != selected_route_id:
+            errors.append(
+                "selection.selected_route_id does not match "
+                "the candidate marked as selected"
+            )
+
+    for route in candidate_routes:
+        disposition = route.get("disposition")
+        rejection_reasons = route.get(
+            "rejection_reasons",
+            [],
+        )
+
+        if (
+            disposition == "selected"
+            and rejection_reasons
+        ):
+            errors.append(
+                f"{route.get('route_id')}: selected route "
+                "must not contain rejection_reasons"
+            )
+
+        if (
+            disposition == "rejected"
+            and not rejection_reasons
+        ):
+            errors.append(
+                f"{route.get('route_id')}: rejected route "
+                "must contain at least one rejection reason"
+            )
+
+    return errors
+
+
+def run_semantic_validation(
+    validator_name: str | None,
+    document: dict[str, Any],
+) -> list[str]:
+    if validator_name is None:
+        return []
+
+    if validator_name == "route_decision":
+        return validate_route_decision_semantics(
+            document
+        )
+
+    return [
+        f"Unknown semantic validator: {validator_name}"
+    ]
+
+
 def validate_target(
     name: str,
     schema_path: Path,
     example_path: Path,
+    semantic_validator: str | None,
 ) -> bool:
     print(f"[validate] {name}")
     print(
@@ -106,28 +223,49 @@ def validate_target(
         format_checker=FormatChecker(),
     )
 
-    errors = sorted(
+    schema_errors = sorted(
         validator.iter_errors(example),
         key=lambda error: list(
             error.absolute_path
         ),
     )
 
-    if errors:
+    semantic_errors = run_semantic_validation(
+        semantic_validator,
+        example,
+    )
+
+    if schema_errors or semantic_errors:
         print(f"[failed] {name}")
 
-        for error in errors:
+        for error in schema_errors:
             path = format_error_path(error)
             print(
-                f"  Error: {path}: "
+                f"  Schema Error: {path}: "
                 f"{error.message}"
+            )
+
+        for error in semantic_errors:
+            print(
+                f"  Semantic Error: {error}"
             )
 
         return False
 
     print(
-        f"[ok] {example_path.name} is valid"
+        f"[schema-ok] {name}"
     )
+
+    if semantic_validator is not None:
+        print(
+            f"[semantic-ok] {name}"
+        )
+
+    print(
+        f"[example-ok] "
+        f"{example_path.name}"
+    )
+
     return True
 
 
@@ -145,6 +283,9 @@ def main() -> int:
                 name=target["name"],
                 schema_path=target["schema"],
                 example_path=target["example"],
+                semantic_validator=target[
+                    "semantic_validator"
+                ],
             )
         except RuntimeError as exc:
             print(f"[error] {exc}")
