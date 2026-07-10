@@ -1,0 +1,238 @@
+schema_version: "0.3.0"
+
+route_decision_id: "rdr-2026-000001"
+
+recorded_at: "2026-07-10T20:45:00Z"
+
+task_ref: "task-architecture-review-001"
+
+route_trace_ref: "mrt-2026-000001"
+
+decision_context:
+  task_complexity: "high"
+  data_sensitivity: "confidential"
+  latency_priority: "medium"
+  cost_priority: "medium"
+  energy_priority: "high"
+  quality_requirement: "high"
+  decision_summary: >
+    Select the minimum sufficient route capable of performing
+    a high-complexity architecture review while preserving the
+    required enterprise data boundary.
+
+constraints:
+  required_capability_level: "advanced"
+  maximum_latency_ms: 15000
+  maximum_cost_class: "medium"
+
+  allowed_localities:
+    - "local_device"
+    - "on_prem"
+    - "private_cloud"
+
+  required_region_refs:
+    - "region-policy-jp"
+
+  data_boundary_policy_refs:
+    - "data-residency-policy-jp-01"
+    - "model-input-handling-policy-04"
+
+  security_policy_refs:
+    - "approved-model-provider-policy-01"
+    - "enterprise-ai-routing-policy-06"
+
+candidate_routes:
+  - route_id: "route-local-small-01"
+
+    route_class: "local_model"
+
+    model_ref: "model-local-small-07"
+
+    provider_binding_ref: "peb-local-runtime-001"
+
+    placement_candidate_ref: "placement-local-device-01"
+
+    locality: "local_device"
+
+    capability_assessment:
+      level: "standard"
+      meets_requirement: false
+      assessment_ref: "capability-assessment-021"
+
+    latency_assessment:
+      class: "very_low"
+      estimated_latency_ms: 950
+      within_budget: true
+
+    cost_assessment:
+      cost_class: "minimal"
+      estimated_cost_ref: "cost-estimate-local-001"
+      within_budget: true
+
+    energy_assessment:
+      energy_class: "low"
+      energy_estimate_ref: "energy-estimate-local-001"
+
+    policy_status: "allowed"
+
+    policy_evidence_refs:
+      - "local-processing-policy-check-019"
+
+    disposition: "rejected"
+
+    rejection_reasons:
+      - "capability_threshold_not_met"
+
+    notes: >
+      Local execution was preferred for cost, latency,
+      and energy reasons, but capability was insufficient
+      for the required architecture analysis.
+
+  - route_id: "route-enterprise-private-01"
+
+    route_class: "enterprise_endpoint"
+
+    model_ref: "model-enterprise-reasoning-03"
+
+    provider_binding_ref: "peb-2026-000001"
+
+    placement_candidate_ref: "placement-private-cloud-04"
+
+    locality: "private_cloud"
+
+    capability_assessment:
+      level: "advanced"
+      meets_requirement: true
+      assessment_ref: "capability-assessment-022"
+
+    latency_assessment:
+      class: "medium"
+      estimated_latency_ms: 6200
+      within_budget: true
+
+    cost_assessment:
+      cost_class: "medium"
+      estimated_cost_ref: "cost-estimate-enterprise-003"
+      within_budget: true
+
+    energy_assessment:
+      energy_class: "medium"
+      energy_estimate_ref: "energy-estimate-enterprise-003"
+
+    policy_status: "allowed"
+
+    policy_evidence_refs:
+      - "enterprise-provider-policy-check-041"
+      - "region-policy-check-018"
+
+    disposition: "selected"
+
+    notes: >
+      This route satisfies the capability requirement
+      while preserving the required enterprise trust
+      and data residency boundaries.
+
+  - route_id: "route-frontier-public-01"
+
+    route_class: "frontier_model"
+
+    model_ref: "model-frontier-external-01"
+
+    provider_binding_ref: "peb-public-provider-005"
+
+    placement_candidate_ref: "placement-public-cloud-09"
+
+    locality: "public_cloud"
+
+    capability_assessment:
+      level: "frontier"
+      meets_requirement: true
+      assessment_ref: "capability-assessment-023"
+
+    latency_assessment:
+      class: "medium"
+      estimated_latency_ms: 7800
+      within_budget: true
+
+    cost_assessment:
+      cost_class: "high"
+      estimated_cost_ref: "cost-estimate-frontier-008"
+      within_budget: false
+
+    energy_assessment:
+      energy_class: "high"
+      energy_estimate_ref: "energy-estimate-frontier-008"
+
+    policy_status: "blocked"
+
+    policy_evidence_refs:
+      - "data-boundary-policy-check-051"
+
+    disposition: "rejected"
+
+    rejection_reasons:
+      - "data_boundary_violation"
+      - "cost_budget_exceeded"
+
+    notes: >
+      Capability exceeded requirements, but the route was
+      rejected because it violated the task data boundary
+      and exceeded the configured cost class.
+
+selection:
+  selected_route_id: "route-enterprise-private-01"
+
+  selection_reason_codes:
+    - "capability_fit"
+    - "data_boundary_fit"
+    - "region_fit"
+    - "security_fit"
+    - "minimum_sufficient_compute"
+
+  selection_summary: >
+    The enterprise private route was selected as the
+    minimum sufficient route satisfying capability,
+    data residency, security, latency, and cost constraints.
+
+  decision_mode: "policy_driven"
+
+  decision_agent_ref: "routing-agent-01"
+
+  override_applied: false
+
+pranayama_assessment:
+  local_first_checked: true
+
+  smaller_model_checked: true
+
+  minimum_sufficient_compute_applied: true
+
+  escalation_required: true
+
+  escalation_reason: >
+    The local small model did not meet the advanced
+    capability threshold required for the task.
+
+  compute_necessity: "high"
+
+  pranayama_policy_ref: "computational-pranayama-policy-07"
+
+  assessment_notes: >
+    Execution was escalated only after the lower-cost
+    and lower-energy local route failed the capability gate.
+
+policy_evaluation:
+  overall_status: "passed"
+
+  evaluated_policy_refs:
+    - "data-residency-policy-jp-01"
+    - "approved-model-provider-policy-01"
+    - "enterprise-ai-routing-policy-06"
+    - "computational-pranayama-policy-07"
+
+status: "decided"
+
+notes: >
+  This receipt preserves the candidate route set,
+  rejected alternatives, selection rationale,
+  policy evaluation, and minimum-sufficient-compute assessment.
