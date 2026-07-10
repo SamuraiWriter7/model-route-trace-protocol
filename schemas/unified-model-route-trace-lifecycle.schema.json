@@ -1,0 +1,588 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/unified-model-route-trace-lifecycle.schema.json",
+  "title": "Unified Model Route Trace Lifecycle",
+  "description": "Unifies origin, route decision, provider binding, compute placement, execution traces, cross-agent route graph, artifact production, trace integrity, audit readiness, and royalty readiness into one traceable lifecycle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lifecycle_id",
+    "recorded_at",
+    "task_ref",
+    "origin",
+    "decision",
+    "bindings",
+    "placement",
+    "execution",
+    "route_graph",
+    "artifact",
+    "trace_integrity",
+    "audit_readiness",
+    "royalty_readiness",
+    "lifecycle_phases",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.5.0"
+    },
+
+    "lifecycle_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for the unified model route trace lifecycle."
+    },
+
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "task_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin_ref",
+        "origin_type",
+        "verified"
+      ],
+      "properties": {
+        "origin_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "origin_type": {
+          "type": "string",
+          "enum": [
+            "human_request",
+            "agent_request",
+            "scheduled_task",
+            "event_trigger",
+            "origin_trace",
+            "re_ignition",
+            "other"
+          ]
+        },
+
+        "ignition_ref": {
+          "type": "string"
+        },
+
+        "verified": {
+          "type": "boolean"
+        },
+
+        "verification_ref": {
+          "type": "string"
+        }
+      }
+    },
+
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_decision_ref",
+        "decision_status"
+      ],
+      "properties": {
+        "route_decision_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "decision_status": {
+          "type": "string",
+          "enum": [
+            "decided",
+            "executed",
+            "superseded",
+            "failed",
+            "unresolved"
+          ]
+        },
+
+        "selected_route_ref": {
+          "type": "string"
+        },
+
+        "decision_policy_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_binding_refs",
+        "all_required_bindings_resolved"
+      ],
+      "properties": {
+        "provider_binding_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "all_required_bindings_resolved": {
+          "type": "boolean"
+        },
+
+        "unresolved_binding_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "placement_receipt_refs",
+        "placement_status"
+      ],
+      "properties": {
+        "placement_receipt_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "placement_status": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "partially_verified",
+            "unverified",
+            "not_applicable"
+          ]
+        },
+
+        "placement_policy_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_trace_refs",
+        "execution_status"
+      ],
+      "properties": {
+        "route_trace_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "execution_status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "partial",
+            "failed",
+            "cancelled"
+          ]
+        },
+
+        "fallback_used": {
+          "type": "boolean"
+        },
+
+        "fallback_route_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "route_graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_graph_ref",
+        "graph_status"
+      ],
+      "properties": {
+        "route_graph_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "graph_status": {
+          "type": "string",
+          "enum": [
+            "planned",
+            "active",
+            "completed",
+            "failed",
+            "partial",
+            "superseded"
+          ]
+        },
+
+        "graph_integrity_verified": {
+          "type": "boolean"
+        },
+
+        "graph_integrity_ref": {
+          "type": "string"
+        }
+      }
+    },
+
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_refs",
+        "artifact_binding_status"
+      ],
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "artifact_binding_status": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "partially_verified",
+            "unverified"
+          ]
+        },
+
+        "artifact_binding_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "trace_integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin_link_complete",
+        "decision_link_complete",
+        "binding_link_complete",
+        "placement_link_complete",
+        "execution_link_complete",
+        "graph_link_complete",
+        "artifact_link_complete",
+        "overall_status"
+      ],
+      "properties": {
+        "origin_link_complete": {
+          "type": "boolean"
+        },
+
+        "decision_link_complete": {
+          "type": "boolean"
+        },
+
+        "binding_link_complete": {
+          "type": "boolean"
+        },
+
+        "placement_link_complete": {
+          "type": "boolean"
+        },
+
+        "execution_link_complete": {
+          "type": "boolean"
+        },
+
+        "graph_link_complete": {
+          "type": "boolean"
+        },
+
+        "artifact_link_complete": {
+          "type": "boolean"
+        },
+
+        "overall_status": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial",
+            "broken",
+            "unverified"
+          ]
+        },
+
+        "missing_reference_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "integrity_check_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "audit_readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_decision_auditable",
+        "provider_path_auditable",
+        "placement_auditable",
+        "cross_agent_path_auditable",
+        "artifact_lineage_auditable",
+        "overall_status"
+      ],
+      "properties": {
+        "route_decision_auditable": {
+          "type": "boolean"
+        },
+
+        "provider_path_auditable": {
+          "type": "boolean"
+        },
+
+        "placement_auditable": {
+          "type": "boolean"
+        },
+
+        "cross_agent_path_auditable": {
+          "type": "boolean"
+        },
+
+        "artifact_lineage_auditable": {
+          "type": "boolean"
+        },
+
+        "overall_status": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "conditionally_ready",
+            "not_ready",
+            "unverified"
+          ]
+        },
+
+        "condition_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "blocking_issue_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "royalty_readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin_attribution_ready",
+        "agent_contribution_path_ready",
+        "model_route_path_ready",
+        "tool_contribution_path_ready",
+        "human_contribution_path_ready",
+        "artifact_binding_ready",
+        "overall_status"
+      ],
+      "properties": {
+        "origin_attribution_ready": {
+          "type": "boolean"
+        },
+
+        "agent_contribution_path_ready": {
+          "type": "boolean"
+        },
+
+        "model_route_path_ready": {
+          "type": "boolean"
+        },
+
+        "tool_contribution_path_ready": {
+          "type": "boolean"
+        },
+
+        "human_contribution_path_ready": {
+          "type": "boolean"
+        },
+
+        "artifact_binding_ready": {
+          "type": "boolean"
+        },
+
+        "overall_status": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "conditionally_ready",
+            "not_ready",
+            "not_applicable",
+            "unverified"
+          ]
+        },
+
+        "unresolved_contribution_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "royalty_bridge_ref": {
+          "type": "string"
+        }
+      }
+    },
+
+    "lifecycle_phases": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "status"
+        ],
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "origin",
+              "decision",
+              "binding",
+              "placement",
+              "execution",
+              "route_graph",
+              "artifact",
+              "trace_integrity",
+              "audit_readiness",
+              "royalty_readiness"
+            ]
+          },
+
+          "record_ref": {
+            "type": "string"
+          },
+
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "completed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "completed",
+              "failed",
+              "blocked",
+              "skipped"
+            ]
+          },
+
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "partial",
+        "failed",
+        "superseded"
+      ]
+    },
+
+    "notes": {
+      "type": "string"
+    }
+  }
+}
