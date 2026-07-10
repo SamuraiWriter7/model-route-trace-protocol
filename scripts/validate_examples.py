@@ -6,7 +6,7 @@ import json
 import sys
 from collections import defaultdict, deque
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
@@ -55,6 +55,16 @@ VALIDATION_TARGETS = [
         / "examples"
         / "cross-agent-model-route-graph.example.yaml",
         "semantic_validator": "route_graph",
+    },
+    {
+        "name": "Unified Model Route Trace Lifecycle",
+        "schema": ROOT_DIR
+        / "schemas"
+        / "unified-model-route-trace-lifecycle.schema.json",
+        "example": ROOT_DIR
+        / "examples"
+        / "unified-model-route-trace-lifecycle.example.yaml",
+        "semantic_validator": "unified_lifecycle",
     },
 ]
 
@@ -154,14 +164,14 @@ def validate_route_decision_semantics(
         )
 
     if selected_candidates:
-        disposition_route_id = selected_candidates[
-            0
-        ].get("route_id")
+        candidate_id = selected_candidates[0].get(
+            "route_id"
+        )
 
-        if disposition_route_id != selected_route_id:
+        if candidate_id != selected_route_id:
             errors.append(
                 "selection.selected_route_id does not "
-                "match the selected candidate"
+                "match the candidate marked selected"
             )
 
     for route in candidate_routes:
@@ -192,7 +202,7 @@ def validate_route_decision_semantics(
         ):
             errors.append(
                 f"{route_id}: rejected route must "
-                "contain at least one rejection reason"
+                "contain rejection_reasons"
             )
 
     return errors
@@ -203,7 +213,6 @@ def reachable_nodes(
     adjacency: dict[str, list[str]],
 ) -> set[str]:
     visited: set[str] = set()
-
     queue: deque[str] = deque(start_nodes)
 
     while queue:
@@ -244,7 +253,6 @@ def has_cycle(
 
     while queue:
         node_id = queue.popleft()
-
         visited_count += 1
 
         for next_node in adjacency.get(
@@ -311,7 +319,6 @@ def validate_route_graph_semantics(
     ] = defaultdict(list)
 
     indegree: dict[str, int] = defaultdict(int)
-
     outdegree: dict[str, int] = defaultdict(int)
 
     for edge in edges:
@@ -325,14 +332,14 @@ def validate_route_graph_semantics(
 
         if from_node not in node_id_set:
             errors.append(
-                f"{edge_id}: from_node references "
-                f"unknown node '{from_node}'"
+                f"{edge_id}: unknown from_node "
+                f"'{from_node}'"
             )
 
         if to_node not in node_id_set:
             errors.append(
-                f"{edge_id}: to_node references "
-                f"unknown node '{to_node}'"
+                f"{edge_id}: unknown to_node "
+                f"'{to_node}'"
             )
 
         if from_node == to_node:
@@ -345,7 +352,6 @@ def validate_route_graph_semantics(
             and to_node in node_id_set
         ):
             adjacency[from_node].append(to_node)
-
             reverse_adjacency[to_node].append(
                 from_node
             )
@@ -356,27 +362,23 @@ def validate_route_graph_semantics(
     for node_id in entry_node_ids:
         if node_id not in node_id_set:
             errors.append(
-                f"entry_node_ids references unknown "
-                f"node '{node_id}'"
+                f"unknown entry node '{node_id}'"
             )
-            continue
-
-        if indegree.get(node_id, 0) != 0:
+        elif indegree.get(node_id, 0) != 0:
             errors.append(
-                f"entry node '{node_id}' has incoming edges"
+                f"entry node '{node_id}' has "
+                "incoming edges"
             )
 
     for node_id in terminal_node_ids:
         if node_id not in node_id_set:
             errors.append(
-                f"terminal_node_ids references unknown "
-                f"node '{node_id}'"
+                f"unknown terminal node '{node_id}'"
             )
-            continue
-
-        if outdegree.get(node_id, 0) != 0:
+        elif outdegree.get(node_id, 0) != 0:
             errors.append(
-                f"terminal node '{node_id}' has outgoing edges"
+                f"terminal node '{node_id}' has "
+                "outgoing edges"
             )
 
     if has_cycle(
@@ -385,113 +387,209 @@ def validate_route_graph_semantics(
         indegree,
     ):
         errors.append(
-            "route graph contains at least one cycle; "
-            "v0.4 graphs must be DAGs"
+            "route graph contains a cycle"
         )
 
-    valid_entry_nodes = [
+    valid_entries = [
         node_id
         for node_id in entry_node_ids
         if node_id in node_id_set
     ]
 
-    if valid_entry_nodes:
-        reachable_from_entries = reachable_nodes(
-            valid_entry_nodes,
+    if valid_entries:
+        reachable = reachable_nodes(
+            valid_entries,
             adjacency,
         )
 
-        unreachable_nodes = (
-            node_id_set - reachable_from_entries
-        )
+        unreachable = node_id_set - reachable
 
-        if unreachable_nodes:
+        if unreachable:
             errors.append(
                 "nodes unreachable from entry nodes: "
-                + ", ".join(
-                    sorted(unreachable_nodes)
-                )
+                + ", ".join(sorted(unreachable))
             )
 
-    valid_terminal_nodes = [
+    valid_terminals = [
         node_id
         for node_id in terminal_node_ids
         if node_id in node_id_set
     ]
 
-    if valid_terminal_nodes:
+    if valid_terminals:
         reaches_terminal = reachable_nodes(
-            valid_terminal_nodes,
+            valid_terminals,
             reverse_adjacency,
         )
 
-        dead_end_nodes = (
-            node_id_set - reaches_terminal
-        )
+        dead_ends = node_id_set - reaches_terminal
 
-        if dead_end_nodes:
+        if dead_ends:
             errors.append(
-                "nodes that cannot reach a terminal node: "
-                + ", ".join(
-                    sorted(dead_end_nodes)
-                )
+                "nodes unable to reach terminal: "
+                + ", ".join(sorted(dead_ends))
             )
 
-    parallel_groups = document.get(
-        "parallel_groups",
-        [],
-    )
-
-    for group in parallel_groups:
-        group_id = group.get(
-            "group_id",
-            "<unknown>",
-        )
-
-        for member_node_id in group.get(
-            "member_node_ids",
-            [],
-        ):
-            if member_node_id not in node_id_set:
-                errors.append(
-                    f"{group_id}: member_node_ids "
-                    f"references unknown node "
-                    f"'{member_node_id}'"
-                )
-
-        join_node_id = group.get("join_node_id")
-
-        if (
-            join_node_id is not None
-            and join_node_id not in node_id_set
-        ):
-            errors.append(
-                f"{group_id}: join_node_id references "
-                f"unknown node '{join_node_id}'"
-            )
-
-    graph_metrics = document.get(
+    metrics = document.get(
         "graph_metrics",
         {},
     )
 
     if (
-        "node_count" in graph_metrics
-        and graph_metrics["node_count"] != len(nodes)
+        "node_count" in metrics
+        and metrics["node_count"] != len(nodes)
     ):
         errors.append(
-            "graph_metrics.node_count does not match "
-            "the actual number of nodes"
+            "graph_metrics.node_count mismatch"
         )
 
     if (
-        "edge_count" in graph_metrics
-        and graph_metrics["edge_count"] != len(edges)
+        "edge_count" in metrics
+        and metrics["edge_count"] != len(edges)
     ):
         errors.append(
-            "graph_metrics.edge_count does not match "
-            "the actual number of edges"
+            "graph_metrics.edge_count mismatch"
         )
+
+    return errors
+
+
+def validate_unified_lifecycle_semantics(
+    document: dict[str, Any],
+) -> list[str]:
+    errors: list[str] = []
+
+    required_phases = {
+        "origin",
+        "decision",
+        "binding",
+        "placement",
+        "execution",
+        "route_graph",
+        "artifact",
+        "trace_integrity",
+        "audit_readiness",
+        "royalty_readiness",
+    }
+
+    phases = document.get(
+        "lifecycle_phases",
+        [],
+    )
+
+    phase_names = [
+        phase.get("phase")
+        for phase in phases
+        if isinstance(phase, dict)
+    ]
+
+    if len(phase_names) != len(set(phase_names)):
+        errors.append(
+            "lifecycle_phases contains duplicate phases"
+        )
+
+    missing_phases = (
+        required_phases - set(phase_names)
+    )
+
+    if missing_phases:
+        errors.append(
+            "missing lifecycle phases: "
+            + ", ".join(sorted(missing_phases))
+        )
+
+    trace_integrity = document.get(
+        "trace_integrity",
+        {},
+    )
+
+    integrity_links = [
+        trace_integrity.get("origin_link_complete"),
+        trace_integrity.get("decision_link_complete"),
+        trace_integrity.get("binding_link_complete"),
+        trace_integrity.get("placement_link_complete"),
+        trace_integrity.get("execution_link_complete"),
+        trace_integrity.get("graph_link_complete"),
+        trace_integrity.get("artifact_link_complete"),
+    ]
+
+    integrity_status = trace_integrity.get(
+        "overall_status"
+    )
+
+    if (
+        integrity_status == "complete"
+        and not all(integrity_links)
+    ):
+        errors.append(
+            "trace_integrity.overall_status cannot be "
+            "'complete' while one or more links are incomplete"
+        )
+
+    audit = document.get(
+        "audit_readiness",
+        {},
+    )
+
+    audit_checks = [
+        audit.get("route_decision_auditable"),
+        audit.get("provider_path_auditable"),
+        audit.get("placement_auditable"),
+        audit.get("cross_agent_path_auditable"),
+        audit.get("artifact_lineage_auditable"),
+    ]
+
+    if (
+        audit.get("overall_status") == "ready"
+        and not all(audit_checks)
+    ):
+        errors.append(
+            "audit_readiness cannot be 'ready' while "
+            "one or more auditability checks are false"
+        )
+
+    royalty = document.get(
+        "royalty_readiness",
+        {},
+    )
+
+    royalty_checks = [
+        royalty.get("origin_attribution_ready"),
+        royalty.get("agent_contribution_path_ready"),
+        royalty.get("model_route_path_ready"),
+        royalty.get("tool_contribution_path_ready"),
+        royalty.get("human_contribution_path_ready"),
+        royalty.get("artifact_binding_ready"),
+    ]
+
+    if (
+        royalty.get("overall_status") == "ready"
+        and not all(royalty_checks)
+    ):
+        errors.append(
+            "royalty_readiness cannot be 'ready' while "
+            "one or more readiness checks are false"
+        )
+
+    if document.get("status") == "completed":
+        incomplete_phases = [
+            phase.get("phase")
+            for phase in phases
+            if phase.get("status")
+            not in {"completed", "skipped"}
+        ]
+
+        if incomplete_phases:
+            errors.append(
+                "completed lifecycle contains incomplete phases: "
+                + ", ".join(
+                    sorted(
+                        phase
+                        for phase in incomplete_phases
+                        if phase is not None
+                    )
+                )
+            )
 
     return errors
 
@@ -500,22 +598,30 @@ def run_semantic_validation(
     validator_name: str | None,
     document: dict[str, Any],
 ) -> list[str]:
+    validators: dict[
+        str,
+        Callable[[dict[str, Any]], list[str]],
+    ] = {
+        "route_decision":
+            validate_route_decision_semantics,
+        "route_graph":
+            validate_route_graph_semantics,
+        "unified_lifecycle":
+            validate_unified_lifecycle_semantics,
+    }
+
     if validator_name is None:
         return []
 
-    if validator_name == "route_decision":
-        return validate_route_decision_semantics(
-            document
-        )
+    validator = validators.get(validator_name)
 
-    if validator_name == "route_graph":
-        return validate_route_graph_semantics(
-            document
-        )
+    if validator is None:
+        return [
+            f"Unknown semantic validator: "
+            f"{validator_name}"
+        ]
 
-    return [
-        f"Unknown semantic validator: {validator_name}"
-    ]
+    return validator(document)
 
 
 def validate_target(
@@ -525,12 +631,10 @@ def validate_target(
     semantic_validator: str | None,
 ) -> bool:
     print(f"[validate] {name}")
-
     print(
         f"  schema : "
         f"{schema_path.relative_to(ROOT_DIR)}"
     )
-
     print(
         f"  example: "
         f"{example_path.relative_to(ROOT_DIR)}"
@@ -589,11 +693,117 @@ def validate_target(
     return True
 
 
+def validate_cross_record_references() -> list[str]:
+    errors: list[str] = []
+
+    model_route = load_yaml(
+        ROOT_DIR
+        / "examples"
+        / "model-route-record.example.yaml"
+    )
+
+    provider_binding = load_yaml(
+        ROOT_DIR
+        / "examples"
+        / "provider-endpoint-binding.example.yaml"
+    )
+
+    route_decision = load_yaml(
+        ROOT_DIR
+        / "examples"
+        / "route-decision-receipt.example.yaml"
+    )
+
+    route_graph = load_yaml(
+        ROOT_DIR
+        / "examples"
+        / "cross-agent-model-route-graph.example.yaml"
+    )
+
+    lifecycle = load_yaml(
+        ROOT_DIR
+        / "examples"
+        / "unified-model-route-trace-lifecycle.example.yaml"
+    )
+
+    lifecycle_decision_ref = lifecycle[
+        "decision"
+    ]["route_decision_ref"]
+
+    if (
+        lifecycle_decision_ref
+        != route_decision["route_decision_id"]
+    ):
+        errors.append(
+            "lifecycle decision reference does not "
+            "match Route Decision Receipt"
+        )
+
+    lifecycle_graph_ref = lifecycle[
+        "route_graph"
+    ]["route_graph_ref"]
+
+    if lifecycle_graph_ref != route_graph["graph_id"]:
+        errors.append(
+            "lifecycle graph reference does not "
+            "match Cross-Agent Model Route Graph"
+        )
+
+    binding_refs = set(
+        lifecycle["bindings"][
+            "provider_binding_refs"
+        ]
+    )
+
+    if (
+        provider_binding["binding_id"]
+        not in binding_refs
+    ):
+        errors.append(
+            "lifecycle does not include the example "
+            "Provider Endpoint Binding"
+        )
+
+    route_trace_refs = set(
+        lifecycle["execution"][
+            "route_trace_refs"
+        ]
+    )
+
+    if (
+        model_route["route_trace_id"]
+        not in route_trace_refs
+    ):
+        errors.append(
+            "lifecycle does not include the example "
+            "Model Route Record"
+        )
+
+    if (
+        lifecycle["task_ref"]
+        != route_decision["task_ref"]
+    ):
+        errors.append(
+            "task_ref mismatch between lifecycle "
+            "and Route Decision Receipt"
+        )
+
+    if (
+        lifecycle["task_ref"]
+        != route_graph["task_ref"]
+    ):
+        errors.append(
+            "task_ref mismatch between lifecycle "
+            "and Route Graph"
+        )
+
+    return errors
+
+
 def main() -> int:
     print(
         "=== Model Route Trace Protocol Validation ==="
     )
-
     print()
 
     all_valid = True
@@ -611,12 +821,35 @@ def main() -> int:
 
         except RuntimeError as exc:
             print(f"[error] {exc}")
-
             result = False
 
         all_valid = all_valid and result
-
         print()
+
+    print("[validate] Cross-record references")
+
+    try:
+        reference_errors = (
+            validate_cross_record_references()
+        )
+    except RuntimeError as exc:
+        print(f"[error] {exc}")
+        reference_errors = [str(exc)]
+
+    if reference_errors:
+        all_valid = False
+
+        for error in reference_errors:
+            print(
+                f"  Reference Error: {error}"
+            )
+    else:
+        print(
+            "[reference-ok] "
+            "Cross-record references are consistent"
+        )
+
+    print()
 
     if all_valid:
         print("All examples are valid.")
