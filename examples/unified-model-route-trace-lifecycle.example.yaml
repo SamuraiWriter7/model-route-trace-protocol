@@ -1,0 +1,156 @@
+schema_version: "0.5.0"
+
+lifecycle_id: "umrtl-2026-000001"
+
+recorded_at: "2026-07-10T21:20:00Z"
+
+task_ref: "task-architecture-review-001"
+
+origin:
+  origin_ref: "origin-trace-000078"
+  origin_type: "human_request"
+  ignition_ref: "ignition-record-000019"
+  verified: true
+  verification_ref: "origin-verification-000044"
+
+decision:
+  route_decision_ref: "rdr-2026-000001"
+  decision_status: "executed"
+  selected_route_ref: "route-enterprise-private-01"
+  decision_policy_refs:
+    - "enterprise-ai-routing-policy-06"
+    - "computational-pranayama-policy-07"
+
+bindings:
+  provider_binding_refs:
+    - "peb-local-runtime-001"
+    - "peb-2026-000001"
+    - "peb-local-runtime-004"
+  all_required_bindings_resolved: true
+  unresolved_binding_refs: []
+
+placement:
+  placement_receipt_refs:
+    - "cpr-local-device-011"
+    - "cpr-2026-000118"
+  placement_status: "verified"
+  placement_policy_refs:
+    - "compute-placement-policy-04"
+    - "region-policy-jp"
+
+execution:
+  route_trace_refs:
+    - "mrt-finder-000001"
+    - "mrt-2026-000001"
+    - "mrt-verifier-000019"
+    - "mrt-boundary-000008"
+  execution_status: "completed"
+  fallback_used: false
+  fallback_route_refs: []
+
+route_graph:
+  route_graph_ref: "camrg-2026-000001"
+  graph_status: "completed"
+  graph_integrity_verified: true
+  graph_integrity_ref: "graph-integrity-check-000011"
+
+artifact:
+  artifact_refs:
+    - "artifact-architecture-review-021"
+  artifact_binding_status: "verified"
+  artifact_binding_refs:
+    - "artifact-binding-000037"
+
+trace_integrity:
+  origin_link_complete: true
+  decision_link_complete: true
+  binding_link_complete: true
+  placement_link_complete: true
+  execution_link_complete: true
+  graph_link_complete: true
+  artifact_link_complete: true
+
+  overall_status: "complete"
+
+  missing_reference_refs: []
+
+  integrity_check_refs:
+    - "trace-integrity-check-000025"
+    - "graph-integrity-check-000011"
+    - "artifact-lineage-check-000014"
+
+audit_readiness:
+  route_decision_auditable: true
+  provider_path_auditable: true
+  placement_auditable: true
+  cross_agent_path_auditable: true
+  artifact_lineage_auditable: true
+
+  overall_status: "ready"
+
+  condition_refs: []
+
+  blocking_issue_refs: []
+
+royalty_readiness:
+  origin_attribution_ready: true
+  agent_contribution_path_ready: true
+  model_route_path_ready: true
+  tool_contribution_path_ready: true
+  human_contribution_path_ready: true
+  artifact_binding_ready: true
+
+  overall_status: "ready"
+
+  unresolved_contribution_refs: []
+
+  royalty_bridge_ref: "royalty-bridge-candidate-000012"
+
+lifecycle_phases:
+  - phase: "origin"
+    record_ref: "origin-trace-000078"
+    status: "completed"
+
+  - phase: "decision"
+    record_ref: "rdr-2026-000001"
+    status: "completed"
+
+  - phase: "binding"
+    record_ref: "peb-2026-000001"
+    status: "completed"
+
+  - phase: "placement"
+    record_ref: "cpr-2026-000118"
+    status: "completed"
+
+  - phase: "execution"
+    record_ref: "mrt-2026-000001"
+    status: "completed"
+
+  - phase: "route_graph"
+    record_ref: "camrg-2026-000001"
+    status: "completed"
+
+  - phase: "artifact"
+    record_ref: "artifact-architecture-review-021"
+    status: "completed"
+
+  - phase: "trace_integrity"
+    record_ref: "trace-integrity-check-000025"
+    status: "completed"
+
+  - phase: "audit_readiness"
+    record_ref: "audit-readiness-check-000009"
+    status: "completed"
+
+  - phase: "royalty_readiness"
+    record_ref: "royalty-bridge-candidate-000012"
+    status: "completed"
+
+status: "completed"
+
+notes: >
+  Unified lifecycle record linking the task origin,
+  route decision, provider bindings, compute placement,
+  execution traces, cross-agent graph, artifact lineage,
+  trace integrity, audit readiness, and royalty readiness.
