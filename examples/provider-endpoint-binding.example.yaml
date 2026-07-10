@@ -1,0 +1,61 @@
+schema_version: "0.2.0"
+
+binding_id: "peb-2026-000001"
+
+recorded_at: "2026-07-10T20:30:00Z"
+
+route_trace_ref: "mrt-2026-000001"
+
+provider:
+  provider_name: "example-enterprise-provider"
+  provider_type: "enterprise_cloud"
+  provider_account_ref: "tenant-ref-alpha"
+
+endpoint:
+  endpoint_id: "endpoint-apne-private-07"
+  endpoint_class: "enterprise_endpoint"
+  locality: "private_cloud"
+  protocol: "https_api"
+  address_ref: "logical-endpoint-ai-prod"
+  region: "ap-northeast-1"
+  compute_node_ref: "compute-node-apne-04"
+
+trust_boundary:
+  source_trust_domain: "corporate-ai-zone"
+  destination_trust_domain: "enterprise-provider-tenant"
+  boundary_crossing: true
+  boundary_policy_refs:
+    - "boundary-policy-enterprise-ai-01"
+    - "data-egress-policy-03"
+
+data_boundary:
+  data_classification: "confidential"
+  residency_scope: "region_locked"
+  allowed_regions:
+    - "ap-northeast-1"
+  retention_policy: "zero_data_retention"
+  training_use_policy: "prohibited"
+  policy_refs:
+    - "data-residency-policy-jp-01"
+    - "model-input-handling-policy-04"
+
+authentication:
+  auth_mode: "managed_identity"
+  credential_ref: "auth-profile-ai-prod-03"
+  secret_material_recorded: false
+
+network_path:
+  route_class: "private_network"
+  gateway_ref: "ai-gateway-prod-02"
+  encryption_in_transit: true
+
+policy_refs:
+  - "approved-model-provider-policy-01"
+  - "enterprise-ai-routing-policy-06"
+
+status: "bound"
+
+notes: >
+  This binding records the provider, endpoint, trust boundary,
+  data handling boundary, authentication mode, and network path
+  associated with the referenced model route.
